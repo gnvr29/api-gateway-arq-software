@@ -30,3 +30,6 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# SSL certificates (never commit private keys)
+infra/nginx/ssl/
