@@ -19,6 +19,7 @@ services:
       - orders-service
       - payments-service
       - auth-service
+      - cursos-service
     networks:
       - gateway-network
     restart: unless-stopped
@@ -71,6 +72,44 @@ services:
     networks:
       - gateway-network
 
+  # ─── Cursos Service ─────────────────────────────────────────────────────────
+  cursos-db:
+    image: postgres:16-alpine
+    container_name: cursos-db
+    environment:
+      - POSTGRES_USER=cursos
+      - POSTGRES_PASSWORD=cursos
+      - POSTGRES_DB=cursos_db
+    volumes:
+      - cursos-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cursos -d cursos_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gateway-network
+    restart: unless-stopped
+
+  cursos-service:
+    build:
+      context: ../services/cursos
+      dockerfile: Dockerfile
+    container_name: cursos-service
+    environment:
+      - DB_HOST=cursos-db
+      - DB_PORT=5432
+      - DB_USER=cursos
+      - DB_PASSWORD=cursos
+      - DB_NAME=cursos_db
+      - PORT=8080
+    depends_on:
+      cursos-db:
+        condition: service_healthy
+    networks:
+      - gateway-network
+    restart: unless-stopped
+
   # ─── Observability Stack ────────────────────────────────────────────────────
   loki:
     image: grafana/loki:2.9.0
@@ -118,6 +157,7 @@ volumes:
   nginx-logs:
   loki-data:
   grafana-data:
+  cursos-db-data:
 
 networks:
   gateway-network:
