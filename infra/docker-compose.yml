@@ -20,6 +20,7 @@ services:
       - payments-service
       - auth-service
       - cursos-service
+      - alunos-service
     networks:
       - gateway-network
     restart: unless-stopped
@@ -71,6 +72,44 @@ services:
     command: ["-text", "{\"service\":\"auth\",\"status\":\"ok\"}"]
     networks:
       - gateway-network
+
+  # ─── Alunos Service ─────────────────────────────────────────────────────────
+  alunos-db:
+    image: postgres:16-alpine
+    container_name: alunos-db
+    environment:
+      - POSTGRES_USER=alunos
+      - POSTGRES_PASSWORD=alunos
+      - POSTGRES_DB=alunos_db
+    volumes:
+      - alunos-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alunos -d alunos_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gateway-network
+    restart: unless-stopped
+
+  alunos-service:
+    build:
+      context: ../services/alunos
+      dockerfile: Dockerfile
+    container_name: alunos-service
+    environment:
+      - DB_HOST=alunos-db
+      - DB_PORT=5432
+      - DB_USER=alunos
+      - DB_PASSWORD=alunos
+      - DB_NAME=alunos_db
+      - PORT=8081
+    depends_on:
+      alunos-db:
+        condition: service_healthy
+    networks:
+      - gateway-network
+    restart: unless-stopped
 
   # ─── Cursos Service ─────────────────────────────────────────────────────────
   cursos-db:
@@ -158,6 +197,7 @@ volumes:
   loki-data:
   grafana-data:
   cursos-db-data:
+  alunos-db-data:
 
 networks:
   gateway-network:
