@@ -1,0 +1,26 @@
+meta {
+  name: Create Aluno
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/alunos
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nome": "Gabriel Nogueira",
+    "email": "gabriel@example.com"
+  }
+}
+
+assert {
+  res.status: in [200, 201]
+}

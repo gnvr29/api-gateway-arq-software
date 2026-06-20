@@ -1,0 +1,16 @@
+meta {
+  name: Not Found (catch-all)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/nonexistent
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+  res.body.error: eq not_found
+}

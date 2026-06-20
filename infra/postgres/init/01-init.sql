@@ -1,25 +1,13 @@
--- ─── Initial Database Setup ────────────────────────────────────────────────
--- This script runs automatically on the FIRST container start (fresh volume).
--- Add your schema, extensions, and seed data here.
+-- ─── Database and User Setup ───────────────────────────────────────────────
+-- This runs on first container boot (fresh volume) as the postgres superuser.
+-- Creates isolated databases and users for each service.
 
--- Enable useful extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- Alunos service
+CREATE USER alunos WITH PASSWORD 'alunos';
+CREATE DATABASE alunos_db OWNER alunos;
+GRANT ALL PRIVILEGES ON DATABASE alunos_db TO alunos;
 
--- TODO: Create your tables here. Example:
---
--- CREATE TABLE users (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     email VARCHAR(255) UNIQUE NOT NULL,
---     password_hash TEXT NOT NULL,
---     created_at TIMESTAMPTZ DEFAULT NOW(),
---     updated_at TIMESTAMPTZ DEFAULT NOW()
--- );
---
--- CREATE TABLE orders (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     user_id UUID REFERENCES users(id),
---     status VARCHAR(50) NOT NULL DEFAULT 'pending',
---     total_cents INTEGER NOT NULL,
---     created_at TIMESTAMPTZ DEFAULT NOW()
--- );
+-- Cursos service
+CREATE USER cursos WITH PASSWORD 'cursos';
+CREATE DATABASE cursos_db OWNER cursos;
+GRANT ALL PRIVILEGES ON DATABASE cursos_db TO cursos;
