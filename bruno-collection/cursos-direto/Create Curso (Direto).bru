@@ -1,0 +1,27 @@
+meta {
+  name: Create Curso (Direto)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{cursosDirectUrl}}/cursos
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nome": "Curso Direto",
+    "descricao": "Criado sem passar pelo gateway",
+    "carga_horaria": 120
+  }
+}
+
+assert {
+  res.status: in [200, 201]
+}

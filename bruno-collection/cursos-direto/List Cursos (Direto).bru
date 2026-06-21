@@ -1,0 +1,15 @@
+meta {
+  name: List Cursos (Direto)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{cursosDirectUrl}}/cursos
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}

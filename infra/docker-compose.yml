@@ -31,6 +31,8 @@ services:
       context: ../services/alunos
       dockerfile: Dockerfile
     container_name: alunos-service
+    ports:
+      - "8081:8081"
     environment:
       - PORT=8081
       - DB_HOST=postgres
@@ -56,6 +58,8 @@ services:
       context: ../services/cursos
       dockerfile: Dockerfile
     container_name: cursos-service
+    ports:
+      - "8082:8080"
     environment:
       - PORT=8080
       - DB_HOST=postgres

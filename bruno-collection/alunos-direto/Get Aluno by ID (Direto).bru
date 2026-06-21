@@ -1,0 +1,15 @@
+meta {
+  name: Get Aluno by ID (Direto)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{alunosDirectUrl}}/alunos/00000000-0000-0000-0000-000000000001
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: in [200, 404]
+}

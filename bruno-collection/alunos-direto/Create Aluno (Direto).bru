@@ -1,0 +1,27 @@
+meta {
+  name: Create Aluno (Direto)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{alunosDirectUrl}}/alunos
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nome": "Aluno Direto",
+    "email": "direto@example.com",
+    "matricula": "DIR2024001"
+  }
+}
+
+assert {
+  res.status: in [200, 201]
+}
