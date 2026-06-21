@@ -7,16 +7,16 @@ API Gateway baseado em Nginx que roteia tráfego para os microserviços de **Alu
 ## Arquitetura
 
 ```
-Client (HTTP)
+Client (HTTP :8000)
      │
      ▼
 ┌─────────────────┐
 │  Nginx (80)     │ ← Rate limiting, routing, security headers
 └──────┬──────────┘
        │
-       ├──── /api/alunos ──→ alunos-service:8081
+       ├──── /api/alunos ──→ alunos_service (upstream, least_conn)
        │
-       └──── /api/cursos ──→ cursos-service:8080
+       └──── /api/cursos ──→ cursos_service (upstream, least_conn)
                                     │
                                     ▼
                             ┌──────────────┐
@@ -42,10 +42,10 @@ infra/
 │   ├── conf.d/
 │   │   ├── upstream.conf           # Definição dos backends (load balancing)
 │   │   └── gateway.conf            # Server block, rotas
-│   ├── snippets/
-│   │   ├── proxy-headers.conf      # Headers padrão de proxy (X-Real-IP, X-Forwarded-For)
-│   │   ├── security-headers.conf   # X-Frame-Options, X-Content-Type-Options
-│   │   └── cors.conf               # CORS (incluir em locations que precisem)
+│   └── snippets/
+│       ├── proxy-headers.conf      # Headers padrão de proxy (X-Real-IP, X-Forwarded-For)
+│       ├── security-headers.conf   # X-Frame-Options, X-Content-Type-Options
+│       └── cors.conf               # CORS (incluir em locations que precisem)
 ├── postgres/
 │   └── init/
 │       └── 01-init.sql             # Cria users e databases na primeira execução
@@ -55,6 +55,9 @@ infra/
 │   └── loki-config.yml             # Storage engine de logs
 └── grafana/
     └── provisioning/
+        ├── dashboards/
+        │   ├── dashboards.yml      # Provider config para auto-load
+        │   └── nginx-dashboard.json # Dashboard pré-configurado
         └── datasources/
             └── loki.yml            # Auto-provisiona Loki como datasource
 
@@ -68,7 +71,7 @@ services/
 ## Pré-requisitos
 
 - [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/install/) instalados
-- Portas disponíveis: `80`, `3000`, `3100`, `5432`
+- Portas disponíveis: `8000`, `3000`, `3100`, `5432`
 
 ---
 
@@ -95,23 +98,29 @@ Todos os containers devem estar `healthy` ou `running`.
 
 ```bash
 # Health check do gateway
-curl http://localhost/health
+curl http://localhost:8000/health
 
 # Listar alunos (via gateway)
-curl http://localhost/api/alunos
+curl http://localhost:8000/api/alunos
 
 # Criar um aluno
-curl -X POST http://localhost/api/alunos \
+curl -X POST http://localhost:8000/api/alunos \
   -H "Content-Type: application/json" \
   -d '{"nome": "Gabriel", "email": "gabriel@test.com", "matricula": "2024001"}'
 
+# Buscar aluno por ID (substituir pelo UUID retornado no POST)
+curl http://localhost:8000/api/alunos/00000000-0000-0000-0000-000000000001
+
 # Listar cursos
-curl http://localhost/api/cursos
+curl http://localhost:8000/api/cursos
 
 # Criar um curso
-curl -X POST http://localhost/api/cursos \
+curl -X POST http://localhost:8000/api/cursos \
   -H "Content-Type: application/json" \
   -d '{"nome": "Arquitetura de Software", "descricao": "Patterns e práticas"}'
+
+# Buscar curso por ID (substituir pelo UUID retornado no POST)
+curl http://localhost:8000/api/cursos/00000000-0000-0000-0000-000000000001
 ```
 
 ---
@@ -120,7 +129,7 @@ curl -X POST http://localhost/api/cursos \
 
 | Serviço | URL | Credenciais |
 |---------|-----|-------------|
-| API Gateway | http://localhost | — |
+| API Gateway | http://localhost:8000 | — |
 | Grafana | http://localhost:3000 | admin / admin |
 | Loki API | http://localhost:3100 | — |
 | PostgreSQL | localhost:5432 | postgres / postgres |
