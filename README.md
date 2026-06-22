@@ -6,31 +6,13 @@ API Gateway baseado em Nginx que roteia tráfego para os microserviços de **Alu
 
 ## Arquitetura
 
-```
-Client (HTTP :8000)
-     │
-     ▼
-┌─────────────────┐
-│  Nginx (80)     │ ← Rate limiting, routing, security headers
-└──────┬──────────┘
-       │
-       ├──── /api/alunos ──→ alunos_service (upstream, least_conn)
-       │
-       └──── /api/cursos ──→ cursos_service (upstream, least_conn)
-                                    │
-                                    ▼
-                            ┌──────────────┐
-                            │  PostgreSQL   │
-                            └──────────────┘
-                            (alunos_db, cursos_db)
-```
+<div align="center">
+  <img width="728" height="1079" alt="Diagrama de Arquitetura" src="https://github.com/user-attachments/assets/7199c254-ee85-45a8-961c-4c6a91a0f8f3" />
+  <br/>
+  <br/>
+</div>
 
-**Observabilidade:**
-```
-Nginx JSON logs → Promtail → Loki → Grafana (dashboard)
-```
-
----
+> O sistema utiliza um **API Gateway (Nginx)** como único ponto de entrada, responsável por rate limiting, load balancing e segurança. As requisições são roteadas para dois microsserviços independentes em **Go** (Alunos e Cursos), cada um com seu próprio banco de dados isolado no **PostgreSQL**. Em paralelo, os logs gerados pelo Gateway são coletados pelo **Promtail**, armazenados no **Loki** e visualizados em tempo real pelo **Grafana**.
 
 ## Estrutura de Pastas
 
