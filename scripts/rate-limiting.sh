@@ -1,37 +1,32 @@
 #!/bin/bash
 # ============================================================================
-# 07 - Rate Limiting e Controle de Tráfego
+# Rate Limiting e Controle de Tráfego
 # ============================================================================
-# Demonstra o rate limiting do gateway (30 req/s + burst 20).
+# Demonstra o rate limiting do gateway (10 req/s + burst 5).
 # Envia requisições em rajada para mostrar o bloqueio (429).
 # ============================================================================
 
 GATEWAY="http://localhost:8000"
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  DEMO: Rate Limiting — Controle de Tráfego${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo ""
-echo -e "  ${YELLOW}Configuração:${NC}"
-echo "    • Rate: 30 requisições/segundo por IP"
-echo "    • Burst: 20 (buffer de requisições extras)"
-echo "    • Policy: nodelay (burst é atendido imediatamente)"
-echo ""
+printf "═══════════════════════════════════════════════════════════════\n"
+printf "  DEMO: Rate Limiting — Controle de Tráfego\n"
+printf "═══════════════════════════════════════════════════════════════\n"
+printf "\n"
+printf "  Configuração:\n"
+printf "    • Rate: 10 requisições/segundo por IP\n"
+printf "    • Burst: 5 (buffer de requisições extras)\n"
+printf "    • Policy: nodelay (burst é atendido imediatamente)\n"
+printf "\n"
 
 # --- Enviar rajada ---
-echo -e "${BLUE}[1/3]${NC} Enviando 80 requisições em rajada..."
-echo ""
+printf "[1/3] Enviando 40 requisições em rajada...\n"
+printf "\n"
 
 SUCCESS=0
 RATE_LIMITED=0
 OTHER=0
 
-for i in $(seq 1 80); do
+for i in $(seq 1 40); do
   CODE=$(curl -s -o /dev/null -w "%{http_code}" ${GATEWAY}/api/alunos)
   if [ "$CODE" = "200" ]; then
     SUCCESS=$((SUCCESS + 1))
@@ -41,43 +36,41 @@ for i in $(seq 1 80); do
     OTHER=$((OTHER + 1))
   fi
 
-  # Barra de progresso simples
   if [ $((i % 10)) -eq 0 ]; then
-    echo "  Enviadas: ${i}/80 | ✅ ${SUCCESS} aceitas | 🚫 ${RATE_LIMITED} bloqueadas"
+    printf "  Enviadas: %d/40 | ✅ %d aceitas | 🚫 %d bloqueadas\n" "$i" "$SUCCESS" "$RATE_LIMITED"
   fi
 done
 
-echo ""
-echo -e "${BLUE}[2/3]${NC} Resultado final:"
-echo "  ─────────────────────────────────────────────"
-echo -e "  ${GREEN}✅ Aceitas (200):        ${SUCCESS}${NC}"
-echo -e "  ${RED}🚫 Bloqueadas (429):    ${RATE_LIMITED}${NC}"
+printf "\n"
+printf "[2/3] Resultado final:\n"
+printf "  ─────────────────────────────────────────────\n"
+printf "  ✅ Aceitas (200):        %d\n" "$SUCCESS"
+printf "  🚫 Bloqueadas (429):    %d\n" "$RATE_LIMITED"
 if [ $OTHER -gt 0 ]; then
-  echo -e "  ${YELLOW}⚠ Outros:              ${OTHER}${NC}"
+  printf "  ⚠ Outros:              %d\n" "$OTHER"
 fi
-echo "  ─────────────────────────────────────────────"
-echo ""
+printf "  ─────────────────────────────────────────────\n"
+printf "\n"
 
 # --- Mostrar a resposta de rate limit ---
-echo -e "${BLUE}[3/3]${NC} Corpo da resposta quando rate limited:"
-echo ""
-# Forçar um 429
-for i in $(seq 1 100); do
+printf "[3/3] Corpo da resposta quando rate limited:\n"
+printf "\n"
+for i in $(seq 1 60); do
   RESPONSE=$(curl -s -w "\n%{http_code}" ${GATEWAY}/api/alunos)
   CODE=$(echo "$RESPONSE" | tail -1)
   if [ "$CODE" = "429" ]; then
     BODY=$(echo "$RESPONSE" | head -1)
-    echo "  HTTP 429 Too Many Requests"
-    echo "  Body: ${BODY}"
+    printf "  HTTP 429 Too Many Requests\n"
+    printf "  Body: %s\n" "$BODY"
     break
   fi
 done
-echo ""
+printf "\n"
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}✓ Conclusão:${NC}"
-echo "  • O gateway protege os backends contra sobrecarga"
-echo "  • Após 30 req/s + 20 burst, novas requisições recebem 429"
-echo "  • O rate limit é por IP (binary_remote_addr)"
-echo "  • Isso previne DDoS e garante fair use entre clientes"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf "═══════════════════════════════════════════════════════════════\n"
+printf "✓ Conclusão:\n"
+printf "  • O gateway protege os backends contra sobrecarga\n"
+printf "  • Após 10 req/s + 5 burst, novas requisições recebem 429\n"
+printf "  • O rate limit é por IP (binary_remote_addr)\n"
+printf "  • Isso previne DDoS e garante fair use entre clientes\n"
+printf "═══════════════════════════════════════════════════════════════\n"

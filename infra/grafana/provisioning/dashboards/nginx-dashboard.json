@@ -31,19 +31,20 @@
       "id": 1,
       "options": {
         "colorMode": "background",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["count"], "fields": "", "values": false },
-        "textMode": "value_and_name"
+        "reduceOptions": { "calcs": ["last"], "fields": "", "values": false },
+        "textMode": "value"
       },
       "title": "Total de Requisições",
       "type": "stat",
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "count_over_time({job=\"nginx\", log_type=\"access\"} [$__range])",
-          "refId": "A"
+          "expr": "sum(count_over_time({job=\"nginx\", log_type=\"access\"} [$__range]))",
+          "refId": "A",
+          "instant": true
         }
       ]
     },
@@ -66,19 +67,20 @@
       "id": 2,
       "options": {
         "colorMode": "background",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["count"], "fields": "", "values": false },
-        "textMode": "value_and_name"
+        "reduceOptions": { "calcs": ["last"], "fields": "", "values": false },
+        "textMode": "value"
       },
       "title": "Erros (4xx + 5xx)",
       "type": "stat",
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "count_over_time({job=\"nginx\", log_type=\"access\"} | json | status >= 400 [$__range])",
-          "refId": "A"
+          "expr": "sum(count_over_time({job=\"nginx\", log_type=\"access\", status=~\"[45]..\"} [$__range]))",
+          "refId": "A",
+          "instant": true
         }
       ]
     },
@@ -99,19 +101,20 @@
       "id": 3,
       "options": {
         "colorMode": "background",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["count"], "fields": "", "values": false },
-        "textMode": "value_and_name"
+        "reduceOptions": { "calcs": ["last"], "fields": "", "values": false },
+        "textMode": "value"
       },
       "title": "Rate Limited (429)",
       "type": "stat",
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "count_over_time({job=\"nginx\", log_type=\"access\"} | json | status = 429 [$__range])",
-          "refId": "A"
+          "expr": "sum(count_over_time({job=\"nginx\", log_type=\"access\", status=\"429\"} [$__range]))",
+          "refId": "A",
+          "instant": true
         }
       ]
     },
@@ -132,19 +135,20 @@
       "id": 4,
       "options": {
         "colorMode": "background",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["count"], "fields": "", "values": false },
-        "textMode": "value_and_name"
+        "reduceOptions": { "calcs": ["last"], "fields": "", "values": false },
+        "textMode": "value"
       },
       "title": "Backend Indisponível (502)",
       "type": "stat",
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "count_over_time({job=\"nginx\", log_type=\"access\"} | json | status = 502 [$__range])",
-          "refId": "A"
+          "expr": "sum(count_over_time({job=\"nginx\", log_type=\"access\", status=\"502\"} [$__range]))",
+          "refId": "A",
+          "instant": true
         }
       ]
     },
@@ -163,7 +167,7 @@
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
-            "axisLabel": "req/s",
+            "axisLabel": "requisições",
             "barAlignment": 0,
             "drawStyle": "bars",
             "fillOpacity": 80,
@@ -187,7 +191,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum by (status) (count_over_time({job=\"nginx\", log_type=\"access\"} | json [$__interval]))",
+          "expr": "sum by (status) (count_over_time({job=\"nginx\", log_type=\"access\"} [$__interval]))",
           "legendFormat": "HTTP {{status}}",
           "refId": "A"
         }
@@ -201,7 +205,7 @@
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
-            "axisLabel": "req/s",
+            "axisLabel": "requisições",
             "barAlignment": 0,
             "drawStyle": "bars",
             "fillOpacity": 60,
@@ -225,8 +229,8 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum by (uri) (count_over_time({job=\"nginx\", log_type=\"access\"} | json | uri =~ \"/api/.*\" [$__interval]))",
-          "legendFormat": "{{uri}}",
+          "expr": "sum by (request_uri) (count_over_time({job=\"nginx\", log_type=\"access\"} | json [$__interval]))",
+          "legendFormat": "{{request_uri}}",
           "refId": "A"
         }
       ]
@@ -239,7 +243,7 @@
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
-            "axisLabel": "req/s",
+            "axisLabel": "requisições",
             "barAlignment": 0,
             "drawStyle": "bars",
             "fillOpacity": 60,
@@ -263,7 +267,7 @@
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum by (method) (count_over_time({job=\"nginx\", log_type=\"access\"} | json [$__interval]))",
+          "expr": "sum by (method) (count_over_time({job=\"nginx\", log_type=\"access\"} [$__interval]))",
           "legendFormat": "{{method}}",
           "refId": "A"
         }
@@ -424,6 +428,6 @@
   "timezone": "browser",
   "title": "API Gateway — NGINX",
   "uid": "nginx-gateway",
-  "version": 1,
+  "version": 2,
   "refresh": "10s"
 }

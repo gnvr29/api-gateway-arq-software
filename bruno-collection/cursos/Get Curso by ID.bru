@@ -5,9 +5,13 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/cursos/00000000-0000-0000-0000-000000000001
+  url: {{baseUrl}}/api/cursos/:id
   body: none
   auth: none
+}
+
+params:path {
+  id: e679ec74-7a9e-4975-8233-3fc153dc64d8
 }
 
 assert {
