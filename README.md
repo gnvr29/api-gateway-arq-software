@@ -64,6 +64,20 @@ infra/
 services/
 ├── alunos/                         # Serviço de alunos (Go, porta 8081)
 └── cursos/                         # Serviço de cursos (Go, porta 8080)
+
+bruno-collection/                   # Coleção Bruno para testar a API
+├── gateway/                        # Health check e rota inexistente (via gateway)
+├── alunos/                         # CRUD de alunos via gateway (/api/alunos)
+├── alunos-direto/                  # CRUD de alunos direto no serviço (porta 8081, sem gateway)
+├── cursos/                         # CRUD de cursos via gateway (/api/cursos)
+├── cursos-direto/                  # CRUD de cursos direto no serviço (porta 8082, sem gateway)
+└── environments/
+    └── Local.bru                   # baseUrl (gateway) e *DirectUrl (serviços) locais
+
+scripts/                            # Scripts de demo do comportamento do gateway
+├── rate-limiting.sh                # Rajada de requisições para mostrar o 429
+├── servico-indisponivel.sh         # Para um backend e mostra o erro retornado
+└── tempo-resposta.sh               # Mede latência total vs upstream
 ```
 
 ---
@@ -71,7 +85,7 @@ services/
 ## Pré-requisitos
 
 - [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/install/) instalados
-- Portas disponíveis: `8000`, `3000`, `3100`, `5432`
+- Portas disponíveis: `8000`, `3000`, `3100`, `5432`, `8081`, `8082`
 
 ---
 
@@ -130,6 +144,8 @@ curl http://localhost:8000/api/cursos/00000000-0000-0000-0000-000000000001
 | Serviço | URL | Credenciais |
 |---------|-----|-------------|
 | API Gateway | http://localhost:8000 | — |
+| Alunos Service (direto, sem gateway) | http://localhost:8081 | — |
+| Cursos Service (direto, sem gateway) | http://localhost:8082 | — |
 | Grafana | http://localhost:3000 | admin / admin |
 | Loki API | http://localhost:3100 | — |
 | PostgreSQL | localhost:5432 | postgres / postgres |
@@ -147,6 +163,19 @@ curl http://localhost:8000/api/cursos/00000000-0000-0000-0000-000000000001
 | GET | `/api/cursos` | cursos-service → `GET /cursos` |
 | GET | `/api/cursos/{id}` | cursos-service → `GET /cursos/{id}` |
 | POST | `/api/cursos` | cursos-service → `POST /cursos` |
+
+---
+
+## Testando com Bruno
+
+Em vez de `curl`, é possível usar a coleção [Bruno](https://www.usebruno.com/) em `bruno-collection/`:
+
+1. Abrir o Bruno e fazer "Open Collection" apontando para a pasta `bruno-collection/`
+2. Selecionar o ambiente **Local** (já provisionado com as URLs abaixo)
+3. Rodar as requests organizadas por pasta:
+   - `gateway/` — health check e rota inexistente
+   - `alunos/` e `cursos/` — CRUD via gateway (`http://localhost:8000/api/...`)
+   - `alunos-direto/` e `cursos-direto/` — mesmo CRUD batendo direto no serviço (`http://localhost:8081` / `http://localhost:8082`), útil para comparar latência e comportamento com/sem gateway
 
 ---
 
@@ -238,6 +267,23 @@ docker exec -it postgres psql -U alunos -d alunos_db
 
 # Via psql local
 psql -h localhost -U alunos -d alunos_db
+```
+
+---
+
+## Scripts de Demonstração
+
+A pasta `scripts/` contém shell scripts que demonstram, na prática, funcionalidades do gateway (rodar com a stack já no ar):
+
+```bash
+# Rajada de requisições para mostrar rate limiting (429)
+./scripts/rate-limiting.sh
+
+# Para um backend e mostra como o gateway responde (502/erro tratado)
+./scripts/servico-indisponivel.sh
+
+# Mede latência total (gateway) vs tempo de upstream
+./scripts/tempo-resposta.sh
 ```
 
 ---
